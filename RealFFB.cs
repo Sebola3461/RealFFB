@@ -127,7 +127,7 @@ namespace RealFFB
         internal static MelonPreferences_Entry<int> SinalConstante;
         internal static MelonPreferences_Entry<float> Forca, ForcaMinima, Curva, Suavizacao,
             Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
-            Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor,
+            Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito,
             Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, ImpactoLimite, FaixaGiro;
 
         internal static void Criar()
@@ -153,14 +153,15 @@ namespace RealFFB
             Centralizacao = c.CreateEntry("Centralizacao", 0.18f, description: "Mola de centralização andando (cáster/pino-mestre)");
             CentralizacaoParado = c.CreateEntry("CentralizacaoParado", 0.05f, description: "Mola de centralização parado");
             AmortecedorParado = c.CreateEntry("AmortecedorParado", 0.30f, description: "Peso/arrasto do volante parado (pneu arrastando no chão)");
-            AmortecedorAndando = c.CreateEntry("AmortecedorAndando", 0.10f, description: "Peso/arrasto andando (caixa de direção)");
+            AmortecedorAndando = c.CreateEntry("AmortecedorAndando", 0.20f, description: "Peso/arrasto andando (caixa de direção hidráulica). Segura o volante quando você solta");
             AmortecedorSemMotor = c.CreateEntry("AmortecedorSemMotor", 0.75f, description: "Peso do volante com o motor desligado (sem direção hidráulica)");
-            GanhoSemMotor = c.CreateEntry("GanhoSemMotor", 1.6f, description: "Multiplica autoalinhamento e mola com o motor desligado");
+            GanhoSemMotor = c.CreateEntry("GanhoSemMotor", 1.6f, description: "Multiplica autoalinhamento, mola e atrito com o motor desligado");
+            Atrito = c.CreateEntry("Atrito", 0.06f, description: "Atrito seco da caixa de direção e do pivô: o volante não volta sozinho por qualquer força e para de ir e voltar ao soltar");
 
             Solavancos = c.CreateEntry("Solavancos", 0.6f, description: "Tranco no volante quando só uma roda da frente pega um buraco/lombada");
             Textura = c.CreateEntry("Textura", 0.5f, description: "Vibração da pista medida pela suspensão (paralelepípedo, pista irregular)");
             Asfalto = c.CreateEntry("Asfalto", 0.03f, description: "Vibração fina constante do asfalto andando");
-            VibracaoMotor = c.CreateEntry("VibracaoMotor", 0.04f, description: "Vibração do motor diesel no volante, mais forte parado");
+            VibracaoMotor = c.CreateEntry("VibracaoMotor", 0.10f, description: "Vibração do motor diesel em marcha lenta. Diminui ao acelerar (um quinto no dobro da lenta)");
             Impactos = c.CreateEntry("Impactos", 0.8f, description: "Trancos de batida, meio-fio e buraco forte");
             ImpactoLimite = c.CreateEntry("ImpactoLimite", 18f, description: "Aceleração brusca (m/s²) a partir da qual conta como impacto");
 
@@ -205,19 +206,19 @@ namespace RealFFB
 
         // Presets do painel. Ordem: Forca, ForcaMinima, Curva, Suavizacao, Autoalinhamento, AceleracaoReferencia,
         // TrilhaMecanica, PerdaNoLimite, Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando,
-        // AmortecedorSemMotor, GanhoSemMotor, Solavancos, Textura, Asfalto, VibracaoMotor, Impactos.
+        // AmortecedorSemMotor, GanhoSemMotor, Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito.
         internal static readonly (string nome, float[] v)[] Presets =
         {
-            ("Suave",    new[] { 0.7f, 0.04f, 1.1f, 0.05f, 0.6f, 0.35f, 0.40f, 0.7f, 0.14f, 0.04f, 0.22f, 0.08f, 0.60f, 1.4f, 0.3f, 0.25f, 0.01f, 0.02f, 0.4f }),
-            ("Realista", new[] { 1.0f, 0.05f, 1.0f, 0.03f, 0.8f, 0.30f, 0.35f, 1.0f, 0.18f, 0.05f, 0.30f, 0.10f, 0.75f, 1.6f, 0.6f, 0.50f, 0.03f, 0.04f, 0.8f }),
-            ("Forte",    new[] { 1.3f, 0.07f, 0.9f, 0.02f, 1.1f, 0.25f, 0.30f, 1.0f, 0.25f, 0.08f, 0.38f, 0.14f, 0.90f, 1.8f, 0.9f, 0.80f, 0.05f, 0.06f, 1.2f }),
+            ("Suave",    new[] { 0.7f, 0.04f, 1.1f, 0.05f, 0.6f, 0.35f, 0.40f, 0.7f, 0.14f, 0.04f, 0.22f, 0.14f, 0.60f, 1.4f, 0.3f, 0.25f, 0.01f, 0.06f, 0.4f, 0.03f }),
+            ("Realista", new[] { 1.0f, 0.05f, 1.0f, 0.03f, 0.8f, 0.30f, 0.35f, 1.0f, 0.18f, 0.05f, 0.30f, 0.20f, 0.75f, 1.6f, 0.6f, 0.50f, 0.03f, 0.10f, 0.8f, 0.06f }),
+            ("Forte",    new[] { 1.3f, 0.07f, 0.9f, 0.02f, 1.1f, 0.25f, 0.30f, 1.0f, 0.25f, 0.08f, 0.38f, 0.26f, 0.90f, 1.8f, 0.9f, 0.80f, 0.05f, 0.14f, 1.2f, 0.09f }),
         };
 
         internal static MelonPreferences_Entry<float>[] EntradasPreset => new[]
         {
             Forca, ForcaMinima, Curva, Suavizacao, Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
             Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor,
-            Solavancos, Textura, Asfalto, VibracaoMotor, Impactos,
+            Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito,
         };
 
         internal static void AplicarPreset(int i)
@@ -240,7 +241,7 @@ namespace RealFFB
             if (_w != null) { Fechar(); Log.Msg("Telemetria parada"); return; }
             var arq = Path.Combine(MelonLoader.Utils.MelonEnvironment.UserDataDirectory, Cfg.Id + "_telemetria.csv");
             _w = new StreamWriter(arq, false, new UTF8Encoding(false));
-            _w.WriteLine("t;kmh;autoalinha;solavanco;uso_pneu;carga_frente;saida;mola;amort;vibra;motor;volante_x");
+            _w.WriteLine("t;kmh;autoalinha;solavanco;uso_pneu;carga_frente;saida;mola;amort;vibra;motor;volante_x;vel_volante;atrito;rpm");
             _t0 = Time.unscaledTime;
             Log.Msg("Telemetria gravando em " + arq);
         }
@@ -254,7 +255,7 @@ namespace RealFFB
                 Ffb.Autoalinha.ToString("0.000", ci), Ffb.Solavanco.ToString("0.000", ci), Ffb.Uso.ToString("0.00", ci),
                 Ffb.CargaFrente.ToString("0", ci), Ffb.Saida.ToString("0.000", ci), Ffb.MolaCoef.ToString("0.00", ci),
                 Ffb.Amort.ToString("0.00", ci), Ffb.Vibra.ToString("0.00", ci), Ffb.MotorLigado ? "1" : "0",
-                Logi.PosicaoX().ToString(ci)));
+                Logi.PosicaoX().ToString(ci), Ffb.VelVolante.ToString("0", ci), Ffb.Atrito.ToString("0.000", ci), Onibus.Rpm.ToString("0", ci)));
         }
 
         internal static void Fechar()

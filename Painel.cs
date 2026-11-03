@@ -67,11 +67,12 @@ namespace RealFFB
                 D(Cfg.AmortecedorAndando, "Peso andando", 0f, 0.6f, Pct),
                 D(Cfg.AmortecedorSemMotor, "Peso sem motor", 0f, 1f, Pct),
                 D(Cfg.GanhoSemMotor, "Força sem motor", 1f, 3f, Vezes),
+                D(Cfg.Atrito, "Atrito", 0f, 0.3f, Pct),
                 S("PISTA E MOTOR"),
                 D(Cfg.Solavancos, "Solavancos", 0f, 2f, Pct),
                 D(Cfg.Textura, "Textura da pista", 0f, 2f, Pct),
                 D(Cfg.Asfalto, "Vibração do asfalto", 0f, 0.15f, Pct),
-                D(Cfg.VibracaoMotor, "Vibração do motor", 0f, 0.15f, Pct),
+                D(Cfg.VibracaoMotor, "Motor em marcha lenta", 0f, 0.3f, Pct),
                 D(Cfg.Impactos, "Impactos", 0f, 2f, Pct),
                 D(Cfg.ImpactoLimite, "Sensibilidade a impacto", 5f, 50f, v => v.ToString("0") + " m/s²"),
                 S("VOLANTE"),
@@ -137,7 +138,7 @@ namespace RealFFB
             Caixa(new Rect(janela.x, janela.y, 4f, h), _destaque);
 
             float x = janela.x + 20f, y = janela.y + 14f, cw = w - 40f;
-            GUI.Label(new Rect(x, y, cw, 26f), "VOLANTE REAL", _titulo);
+            GUI.Label(new Rect(x, y, cw, 26f), "REALFFB", _titulo);
             GUI.Label(new Rect(x, y, cw, 26f), Cfg.TeclaPainel.Combinacao.Legivel() + " fecha", _fracoDireita);
             y += 28f;
             GUI.Label(new Rect(x, y, cw, 18f), "Force feedback · " + Ffb.Estado + (Ffb.FaixaAtual > 0 ? $"   ·   volante em {Ffb.FaixaAtual}°" : ""), _fraco);

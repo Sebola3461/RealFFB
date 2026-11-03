@@ -23,7 +23,7 @@ namespace RealFFB
         internal static bool Assumiu;
 
         // Valores ao vivo para o painel e a telemetria.
-        internal static float VelKmh, Autoalinha, Solavanco, Uso, Saida, Clip, Amort, MolaCoef, Vibra, CargaFrente;
+        internal static float VelKmh, Autoalinha, Solavanco, Uso, Saida, Clip, Amort, MolaCoef, Vibra, CargaFrente, Atrito, VelVolante;
         internal static bool MotorLigado, Pausado;
         internal static string Estado = "aguardando o jogo";
 
@@ -43,11 +43,22 @@ namespace RealFFB
         static float _proximaFaixa;
         internal static int FaixaAtual;
 
+        // A SDK da Logitech só fala com o volante com a janela em foco: no Alt+Tab o driver descarta os efeitos,
+        // mas o cache do Logi acha que eles continuam tocando. Na volta, tudo é reenviado algumas vezes, porque o
+        // Profiler/G HUB reaplica o perfil do jogo logo depois de ele ganhar foco.
+        static bool _semFoco;
+        static readonly float[] Reenvios = { 0f, 0.5f, 1.5f };
+        static float _focoVoltou = -1f;
+        static int _reenvio = Reenvios.Length;
+
+        static int _xAnt;
+        static bool _temXAnt;
+
         internal static void CenaMudou()
         {
             Soltar();
             _compAnt = Array.Empty<float>(); _compBaixa = Array.Empty<float>();
-            _temVelAnt = false; _cargaRef = 0f; _satFiltrado = 0f;
+            _temVelAnt = false; _cargaRef = 0f; _satFiltrado = 0f; _temXAnt = false;
             Calibracao.CenaMudou();
         }
 
@@ -72,6 +83,25 @@ namespace RealFFB
                 Assumiu = true;
                 Logi.PararTudo();   // apaga a mola que o jogo deixou ligada
                 Log.Msg(Logi.TemFfb() ? "Volante conectado: o mod assumiu o force feedback" : "Volante conectado, mas a SDK diz que ele não tem force feedback");
+            }
+
+            if (!Application.isFocused)
+            {
+                _semFoco = true; _temXAnt = false;
+                Estado = "jogo sem foco (volta quando a janela voltar)";
+                return;
+            }
+            // Um quadro de mais de meio segundo também conta: o jogo pode ter ficado congelado em segundo plano.
+            if (_semFoco || Time.unscaledDeltaTime > 0.5f)
+            {
+                _semFoco = false;
+                _focoVoltou = Time.unscaledTime; _reenvio = 0;
+                _hidEnviado = -1; _proximaFaixa = 0f;
+            }
+            if (_reenvio < Reenvios.Length && Time.unscaledTime - _focoVoltou >= Reenvios[_reenvio])
+            {
+                Logi.PararTudo();
+                _reenvio++;
             }
 
             AplicarFaixaGiro();
@@ -149,8 +179,9 @@ namespace RealFFB
             AprenderModelo(sat, ang, usoMax);
             sat *= _sinalModelo;
             float satN = _cargaRef > 1f ? sat / (_cargaRef * Mathf.Max(Cfg.AceleracaoReferencia.Value, 0.05f)) : 0f;
-            // Parado, o atrito estático do pneu no VPP oscila; entra suave entre 2 e 10 km/h.
-            satN *= Mathf.Clamp01((VelKmh - 2f) / 8f);
+            // Abaixo de uns 15 km/h a força lateral do VPP oscila e chega atrasada; num ônibus de verdade o
+            // autoalinhamento manobrando é pequeno, quem segura o volante é o atrito e o amortecimento.
+            satN *= Mathf.Clamp01((VelKmh - 3f) / 12f);
             float tau = Cfg.Suavizacao.Value;
             _satFiltrado = tau <= 0.001f ? satN : _satFiltrado + (satN - _satFiltrado) * (1f - Mathf.Exp(-dt / tau));
             Autoalinha = _satFiltrado * Cfg.Autoalinhamento.Value * semMotor;
@@ -164,12 +195,20 @@ namespace RealFFB
             float alvo = (Autoalinha + Solavanco) * _sinalDirecao * Cfg.Forca.Value;
             float s = Mathf.Sign(alvo), a = Mathf.Abs(alvo);
             a = Mathf.Pow(a, Cfg.Curva.Value);
+            // A força mínima entra numa rampa suave: um degrau perto do zero vira ganho alto no centro, e o
+            // volante solto passa a ir e voltar em volta dele.
             float min = Cfg.ForcaMinima.Value;
-            if (min > 0f) a = a >= 0.02f ? min + (1f - min) * a : a / 0.02f * (min + (1f - min) * 0.02f);
-            bool clip = a > 1f;
+            if (min > 0f) a = min * Suave(a / 0.06f) + (1f - min) * a;
+
+            // Atrito seco da caixa de direção e do pivô, contra o giro do volante. A tanh troca o sinal
+            // devagar perto de parado, senão o atrito sozinho vibra a cada quadro.
+            MedirVolante(dt);
+            Atrito = -Cfg.Atrito.Value * semMotor * Cfg.Forca.Value * (float)Math.Tanh(VelVolante / 25f);
+            float total = s * a + Atrito;
+            bool clip = Mathf.Abs(total) > 1f;
             _clipMedia += ((clip ? 1f : 0f) - _clipMedia) * (1f - Mathf.Exp(-dt / 2f));
             Clip = _clipMedia;
-            Saida = s * Mathf.Min(a, 1f);
+            Saida = Mathf.Clamp(total, -1f, 1f);
             int sinal = Cfg.SinalConstante.Value;
             if (sinal == 0) Logi.Constante(0);   // direção ainda desconhecida: não empurra nada
             else Logi.Constante(Mathf.RoundToInt(Saida * 100f * sinal));
@@ -189,7 +228,20 @@ namespace RealFFB
             Estado = sinal == 0 ? "ativo, esperando o teste de direção (pare o ônibus)" : "ativo";
         }
 
-        // Textura da pista (mede a agitação da suspensão) ou vibração do motor parado.
+        static float Suave(float t) { t = Mathf.Clamp01(t); return t * t * (3f - 2f * t); }
+
+        // Velocidade do volante em graus por segundo, no sentido do eixo X da SDK.
+        static void MedirVolante(float dt)
+        {
+            int x = Logi.PosicaoX();
+            if (!_temXAnt) { _xAnt = x; _temXAnt = true; VelVolante = 0f; return; }
+            float graus = FaixaAtual > 0 ? FaixaAtual : Mathf.Max(Cfg.FaixaGiro.Value, 200f);
+            float vel = (x - _xAnt) / 65536f * graus / dt;
+            _xAnt = x;
+            VelVolante += (vel - VelVolante) * (1f - Mathf.Exp(-dt / 0.03f));
+        }
+
+        // Textura da pista (mede a agitação da suspensão) ou vibração do motor.
         static void Superficie(float dt, float hfQuad)
         {
             _texturaRms += (Mathf.Sqrt(hfQuad) - _texturaRms) * (1f - Mathf.Exp(-dt / 0.25f));
@@ -197,7 +249,11 @@ namespace RealFFB
             float asfalto = Cfg.Asfalto.Value * Mathf.Clamp01((VelKmh - 5f) / 50f);
             float estrada = Mathf.Max(pista, asfalto);
             float rpm = Onibus.Rpm;
-            float motor = MotorLigado && rpm > 100f ? Cfg.VibracaoMotor.Value * (1f - 0.7f * Mathf.Clamp01(VelKmh / 30f)) : 0f;
+            // O diesel treme mais em marcha lenta (coxins perto da ressonância, explosões espaçadas); acelerando,
+            // a vibração fica mais fina e fraca: um quinto no dobro da lenta.
+            Onibus.FaixaRpm(out float lenta, out _);
+            float acimaDaLenta = Mathf.Clamp01((rpm - lenta) / Mathf.Max(lenta, 300f));
+            float motor = MotorLigado && rpm > 100f ? Cfg.VibracaoMotor.Value * Mathf.Lerp(1f, 0.2f, acimaDaLenta) : 0f;
             float mag; int periodo;
             if (motor >= estrada)
             {

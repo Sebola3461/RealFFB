@@ -29,6 +29,9 @@ namespace RealFFB
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "AceleracaoReferencia", 0.1f, 1f, 0.01f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "TrilhaMecanica", 0f, 1f, 0.05f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "PerdaNoLimite", 0f, 1f, 0.05f);
+            PBSLoaderCommonInterface.PainelMods.Faixa(C, "Atrito", 0f, 0.3f, 0.01f);
+            PBSLoaderCommonInterface.PainelMods.Faixa(C, "AmortecedorAndando", 0f, 0.6f, 0.01f);
+            PBSLoaderCommonInterface.PainelMods.Faixa(C, "VibracaoMotor", 0f, 0.3f, 0.01f);
         }
     }
 }
