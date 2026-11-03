@@ -11,12 +11,20 @@ namespace RealFFB
     internal static unsafe class Logi
     {
         const string Dll = "LogitechSteeringWheelEnginesWrapper.dll";
-        internal const int Indice = 0;
+        // Índice do controle na SDK. Ela numera todos os controles DirectInput, não só os da Logitech: com um
+        // Arduino, pedaleira ou manche ligado, o volante pode não ser o 0 (que é o que o jogo sempre usa).
+        internal static int Indice = -1;
+        internal const int MaxControles = 4;
+        const int FabricanteLogitech = 0;
+        const int TipoVolante = 0;
+        internal static string Nome = "";
 
         [DllImport("kernel32", CharSet = CharSet.Unicode)] static extern IntPtr GetModuleHandleW(string nome);
         [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true)] static extern IntPtr GetProcAddress(IntPtr mod, string nome);
 
         static IntPtr _mod;
+        static delegate* unmanaged<int, int, byte> _fabricante, _tipo;
+        static delegate* unmanaged<int, char*, int, byte> _nome;
         static delegate* unmanaged<int, byte> _conectado, _temFfb, _pararConst, _pararMola, _pararAmort, _pararSup, _pararSoft;
         static delegate* unmanaged<int, int, byte> _const, _amort, _lateral, _frontal, _soft, _setFaixa;
         static delegate* unmanaged<int, int*, byte> _getFaixa;
@@ -40,6 +48,9 @@ namespace RealFFB
             }
             _conectado = (delegate* unmanaged<int, byte>)F("LogiIsConnected");
             _temFfb = (delegate* unmanaged<int, byte>)F("LogiHasForceFeedback");
+            _fabricante = (delegate* unmanaged<int, int, byte>)F("LogiIsManufacturerConnected");
+            _tipo = (delegate* unmanaged<int, int, byte>)F("LogiIsDeviceConnected");
+            _nome = (delegate* unmanaged<int, char*, int, byte>)F("LogiGetFriendlyProductName");
             _const = (delegate* unmanaged<int, int, byte>)F("LogiPlayConstantForce");
             _pararConst = (delegate* unmanaged<int, byte>)F("LogiStopConstantForce");
             _mola = (delegate* unmanaged<int, int, int, int, byte>)F("LogiPlaySpringForce");
@@ -61,12 +72,62 @@ namespace RealFFB
             return true;
         }
 
-        internal static bool Conectado() => _conectado(Indice) != 0;
-        internal static bool TemFfb() => _temFfb(Indice) != 0;
+        // Com um controle escolhido nas opções, usa só ele. No automático, mantém o índice enquanto ele continuar
+        // conectado; senão procura de novo (volante religado na USB).
+        static int _escolhaAnterior = int.MinValue;
+        internal static bool Conectado()
+        {
+            int escolha = Cfg.Controle.Value;
+            bool mudou = escolha != _escolhaAnterior;
+            _escolhaAnterior = escolha;
+            if (escolha >= 0)
+            {
+                Trocar(escolha < MaxControles && _conectado(escolha) != 0 ? escolha : -1);
+                return Indice >= 0;
+            }
+            if (!mudou && Indice >= 0 && _conectado(Indice) != 0) return true;
+            Escolher();
+            return Indice >= 0;
+        }
+
+        internal static bool ControleConectado(int i) => _mod != IntPtr.Zero && _conectado(i) != 0;
+
+        internal static bool TemFfb() => Indice >= 0 && _temFfb(Indice) != 0;
+
+        // Pesa force feedback, fabricante Logitech e tipo volante, nessa ordem. Controle sem nenhum dos três
+        // (Arduino, pedaleira genérica) nunca é escolhido.
+        static void Escolher()
+        {
+            int melhor = -1, nota = 0;
+            for (int i = 0; i < MaxControles; i++)
+            {
+                if (_conectado(i) == 0) continue;
+                int n = (_temFfb(i) != 0 ? 4 : 0) + (_fabricante(i, FabricanteLogitech) != 0 ? 2 : 0) + (_tipo(i, TipoVolante) != 0 ? 1 : 0);
+                if (n > nota) { nota = n; melhor = i; }
+            }
+            Trocar(melhor);
+        }
+
+        static void Trocar(int novo)
+        {
+            if (novo == Indice) return;
+            PararTudo();
+            Indice = novo;
+            EsquecerCache();
+            Nome = novo < 0 ? "" : NomeDoControle(novo);
+            if (novo >= 0) Log.Msg($"Volante: controle {novo} da SDK ({Nome})");
+        }
+
+        internal static string NomeDoControle(int i)
+        {
+            char* buf = stackalloc char[128];
+            return _nome(i, buf, 128) != 0 ? new string(buf).Trim() : "sem nome";
+        }
 
         // Posição do eixo do volante (-32768 esquerda .. 32767 direita).
         internal static int PosicaoX()
         {
+            if (Indice < 0) return 0;
             var p = _estado(Indice);
             return p == IntPtr.Zero ? 0 : Marshal.ReadInt32(p);
         }
@@ -139,12 +200,14 @@ namespace RealFFB
         // Para tudo que o mod toca e esquece o cache (o próximo Play sempre sai).
         internal static void PararTudo()
         {
-            if (_mod == IntPtr.Zero) return;
-            _pararConst(Indice); _ultConst = int.MinValue;
-            _pararMola(Indice); _molaOff = int.MinValue;
-            _pararAmort(Indice); _ultAmort = int.MinValue;
-            _pararSup(Indice); _supMag = 0;
-            _pararSoft(Indice);
+            if (_mod == IntPtr.Zero || Indice < 0) return;
+            _pararConst(Indice); _pararMola(Indice); _pararAmort(Indice); _pararSup(Indice); _pararSoft(Indice);
+            EsquecerCache();
+        }
+
+        static void EsquecerCache()
+        {
+            _ultConst = int.MinValue; _molaOff = int.MinValue; _ultAmort = int.MinValue; _supMag = 0;
         }
     }
 }

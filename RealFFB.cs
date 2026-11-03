@@ -124,7 +124,7 @@ namespace RealFFB
         static MelonPreferences_Entry<bool> _migrado;
         internal static Atalho TeclaPainel, TeclaTelemetria;
         internal static MelonPreferences_Entry<bool> Ligado, Leds;
-        internal static MelonPreferences_Entry<int> SinalConstante;
+        internal static MelonPreferences_Entry<int> SinalConstante, Controle;
         internal static MelonPreferences_Entry<float> Forca, ForcaMinima, Curva, Suavizacao,
             Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
             Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito,
@@ -138,6 +138,7 @@ namespace RealFFB
             TeclaTelemetria = Atalhos.Registrar(Id, "Telemetria", "Telemetria do volante", "Ctrl+Alt+Shift+F10",
                 () => RealFFBMod.Seguro(Telemetria.Alternar, "Telemetria"), "Liga e desliga a gravação de UserData/RealFFB_telemetria.csv");
             Ligado = c.CreateEntry("Ligado", true, description: "Liga o force feedback do mod (false = o do jogo)");
+            Controle = c.CreateEntry("Controle", -1, description: "Qual controle recebe o force feedback: -1 = automático (procura o volante Logitech), 0 a 3 = número do controle na SDK da Logitech");
             SinalConstante = c.CreateEntry("SinalConstante", 0, description: "Sentido da força constante no seu driver: 1 ou -1. 0 = testar sozinho com o ônibus parado");
 
             Forca = c.CreateEntry("Forca", 1.0f, description: "Força geral (multiplica tudo)");

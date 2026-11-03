@@ -164,6 +164,8 @@ namespace RealFFB
                 _sujo = true;
             }
             y += 30f;
+            if (GUI.Button(new Rect(x, y, cw, 26f), "CONTROLE:  " + TextoControle(), _botao)) ProximoControle();
+            y += 30f;
             if (Calibracao.Resultado.Length > 0) { GUI.Label(new Rect(x, y, cw, 18f), Calibracao.Resultado, _fraco); y += 20f; }
 
             // Lista rolável
@@ -200,6 +202,22 @@ namespace RealFFB
             var dr = new Rect(x, janela.yMax - dicaH - 10f, cw, dicaH);
             Caixa(new Rect(x, dr.y - 6f, cw, 1f), _trilho);
             GUI.Label(dr, !string.IsNullOrEmpty(_dica) ? _dica : "Passe o mouse num ajuste para ver o que ele faz. Tudo vale na hora e é salvo ao fechar.", _dicaEstilo);
+        }
+
+        static string TextoControle()
+        {
+            string atual = Logi.Indice >= 0 ? $"{Logi.Indice} · {Logi.Nome}" : "nenhum";
+            return Cfg.Controle.Value < 0 ? "AUTOMÁTICO  (" + atual + ")" : atual;
+        }
+
+        // Automático, depois cada controle conectado em ordem, e volta ao automático.
+        static void ProximoControle()
+        {
+            int v = Cfg.Controle.Value;
+            do v = v + 1 >= Logi.MaxControles ? -1 : v + 1;
+            while (v >= 0 && !Logi.ControleConectado(v));
+            Cfg.Controle.Value = v;
+            _sujo = true;
         }
 
         // Força saindo agora, centrada no zero; vira amarela quando satura (clip).
