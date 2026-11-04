@@ -7,7 +7,7 @@ using MelonLoader;
 using PBSLoaderCommonUtils;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(RealFFB.RealFFBMod), "RealFFB", "0.2.0", "nzrn")]
+[assembly: MelonInfo(typeof(RealFFB.RealFFBMod), "RealFFB", "0.3.0", "nzrn")]
 [assembly: MelonGame(null, "Proton Bus Simulator")]
 
 namespace RealFFB
