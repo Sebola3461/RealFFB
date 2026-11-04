@@ -25,6 +25,7 @@ namespace RealFFB
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "ForcaMinima", 0f, 0.2f, 0.01f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "Curva", 0.3f, 2.5f, 0.05f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "Suavizacao", 0f, 0.2f, 0.005f);
+            PBSLoaderCommonInterface.PainelMods.Faixa(C, "Antecipacao", 0f, 0.15f, 0.005f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "Autoalinhamento", 0f, 2f, 0.05f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "AceleracaoReferencia", 0.1f, 1f, 0.01f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "TrilhaMecanica", 0f, 1f, 0.05f);

@@ -27,7 +27,7 @@ namespace RealFFB
         internal static bool MotorLigado, Pausado;
         internal static string Estado = "aguardando o jogo";
 
-        static float _satFiltrado, _cargaRef, _clipMedia;
+        static float _satFiltrado, _cargaRef, _clipMedia, _satAnterior, _satTendencia;
         static float[] _compAnt = Array.Empty<float>(), _compBaixa = Array.Empty<float>();
         static float _texturaRms;
         static Vector3 _velAnt, _acelMedia;
@@ -58,7 +58,7 @@ namespace RealFFB
         {
             Soltar();
             _compAnt = Array.Empty<float>(); _compBaixa = Array.Empty<float>();
-            _temVelAnt = false; _cargaRef = 0f; _satFiltrado = 0f; _temXAnt = false;
+            _temVelAnt = false; _cargaRef = 0f; _satFiltrado = 0f; _satAnterior = 0f; _satTendencia = 0f; _temXAnt = false;
             Calibracao.CenaMudou();
         }
 
@@ -184,7 +184,14 @@ namespace RealFFB
             satN *= Mathf.Clamp01((VelKmh - 3f) / 12f);
             float tau = Cfg.Suavizacao.Value;
             _satFiltrado = tau <= 0.001f ? satN : _satFiltrado + (satN - _satFiltrado) * (1f - Mathf.Exp(-dt / tau));
-            Autoalinha = _satFiltrado * Cfg.Autoalinhamento.Value * semMotor;
+            // A força do pneu chega uns 50 ms atrás do volante (o jogo suaviza o esterço e o pneu demora a
+            // responder). Com esse atraso ela empurra o volante quando ele cruza o centro e mantém o vai-e-vem
+            // sozinha. Somar a tendência dela adianta a força e a transforma em amortecimento.
+            float tendencia = (_satFiltrado - _satAnterior) / dt;
+            _satAnterior = _satFiltrado;
+            _satTendencia += (tendencia - _satTendencia) * (1f - Mathf.Exp(-dt / 0.02f));
+            float antecipado = _satFiltrado + Mathf.Clamp(Cfg.Antecipacao.Value * _satTendencia, -0.5f, 0.5f);
+            Autoalinha = antecipado * Cfg.Autoalinhamento.Value * semMotor;
             // Direção hidráulica: a válvula deixa passar para as mãos só uma parte da força da caixa, e o resto a
             // bomba assume. Por isso o volante não fica pesado em curva fechada nem manobrando, e perto do centro
             // a força continua igual. Sem motor não há bomba e chega tudo.

@@ -127,7 +127,7 @@ namespace RealFFB
         internal static MelonPreferences_Entry<int> SinalConstante, Controle;
         internal static MelonPreferences_Entry<float> Forca, ForcaMinima, Curva, Suavizacao,
             Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
-            Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito, LimiteHidraulica,
+            Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito, LimiteHidraulica, Antecipacao,
             Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, ImpactoLimite, FaixaGiro;
 
         internal static void Criar()
@@ -157,6 +157,7 @@ namespace RealFFB
             AmortecedorAndando = c.CreateEntry("AmortecedorAndando", 0.30f, description: "Peso/arrasto andando (caixa de direção hidráulica). Segura o volante quando você solta");
             AmortecedorSemMotor = c.CreateEntry("AmortecedorSemMotor", 0.75f, description: "Peso do volante com o motor desligado (sem direção hidráulica)");
             GanhoSemMotor = c.CreateEntry("GanhoSemMotor", 1.6f, description: "Multiplica autoalinhamento, mola e atrito com o motor desligado");
+            Antecipacao = c.CreateEntry("Antecipacao", 0.06f, description: "Adianta o autoalinhamento, em segundos, para compensar o atraso da física. Corta o vai-e-vem que não para; alto demais deixa o volante nervoso em pista ruim");
             LimiteHidraulica = c.CreateEntry("LimiteHidraulica", 0.55f, description: "Força máxima do autoalinhamento com o motor ligado: a direção hidráulica assume o resto. 1 = sem limite");
             Atrito = c.CreateEntry("Atrito", 0.06f, description: "Atrito seco da caixa de direção e do pivô: o volante não volta sozinho por qualquer força e para de ir e voltar ao soltar");
 
@@ -208,19 +209,19 @@ namespace RealFFB
 
         // Presets do painel. Ordem: Forca, ForcaMinima, Curva, Suavizacao, Autoalinhamento, AceleracaoReferencia,
         // TrilhaMecanica, PerdaNoLimite, Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando,
-        // AmortecedorSemMotor, GanhoSemMotor, Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito, LimiteHidraulica.
+        // AmortecedorSemMotor, GanhoSemMotor, Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito, LimiteHidraulica, Antecipacao.
         internal static readonly (string nome, float[] v)[] Presets =
         {
-            ("Suave",    new[] { 0.7f, 0.04f, 1.1f, 0.02f, 0.35f, 0.45f, 0.40f, 0.7f, 0.18f, 0.04f, 0.22f, 0.24f, 0.60f, 1.4f, 0.3f, 0.25f, 0.01f, 0.06f, 0.4f, 0.03f, 0.45f }),
-            ("Realista", new[] { 1.0f, 0.05f, 1.0f, 0.015f, 0.45f, 0.40f, 0.35f, 1.0f, 0.25f, 0.05f, 0.30f, 0.30f, 0.75f, 1.6f, 0.6f, 0.50f, 0.03f, 0.10f, 0.8f, 0.06f, 0.55f }),
-            ("Forte",    new[] { 1.3f, 0.07f, 0.9f, 0.01f, 0.6f, 0.35f, 0.30f, 1.0f, 0.32f, 0.08f, 0.38f, 0.36f, 0.90f, 1.8f, 0.9f, 0.80f, 0.05f, 0.14f, 1.2f, 0.09f, 0.70f }),
+            ("Suave",    new[] { 0.7f, 0.04f, 1.1f, 0.02f, 0.35f, 0.45f, 0.40f, 0.7f, 0.18f, 0.04f, 0.22f, 0.24f, 0.60f, 1.4f, 0.3f, 0.25f, 0.01f, 0.06f, 0.4f, 0.03f, 0.45f, 0.05f }),
+            ("Realista", new[] { 1.0f, 0.05f, 1.0f, 0.015f, 0.45f, 0.40f, 0.35f, 1.0f, 0.25f, 0.05f, 0.30f, 0.30f, 0.75f, 1.6f, 0.6f, 0.50f, 0.03f, 0.10f, 0.8f, 0.06f, 0.55f, 0.06f }),
+            ("Forte",    new[] { 1.3f, 0.07f, 0.9f, 0.01f, 0.6f, 0.35f, 0.30f, 1.0f, 0.32f, 0.08f, 0.38f, 0.36f, 0.90f, 1.8f, 0.9f, 0.80f, 0.05f, 0.14f, 1.2f, 0.09f, 0.70f, 0.06f }),
         };
 
         internal static MelonPreferences_Entry<float>[] EntradasPreset => new[]
         {
             Forca, ForcaMinima, Curva, Suavizacao, Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
             Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor,
-            Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito, LimiteHidraulica,
+            Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito, LimiteHidraulica, Antecipacao,
         };
 
         internal static void AplicarPreset(int i)

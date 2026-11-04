@@ -55,6 +55,7 @@ namespace RealFFB
                 D(Cfg.ForcaMinima, "Força mínima", 0f, 0.2f, Pct),
                 D(Cfg.Curva, "Curva", 0.5f, 2f, Vezes),
                 D(Cfg.Suavizacao, "Suavização", 0f, 0.15f, Ms),
+                D(Cfg.Antecipacao, "Antecipação", 0f, 0.15f, Ms),
                 S("PNEUS DA FRENTE"),
                 D(Cfg.Autoalinhamento, "Autoalinhamento", 0f, 2f, Pct),
                 D(Cfg.AceleracaoReferencia, "Força cheia em", 0.1f, 0.6f, v => v.ToString("0.00") + " g"),
