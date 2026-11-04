@@ -60,6 +60,7 @@ namespace RealFFB
                 D(Cfg.AceleracaoReferencia, "Força cheia em", 0.1f, 0.6f, v => v.ToString("0.00") + " g"),
                 D(Cfg.TrilhaMecanica, "Parte do cáster", 0f, 1f, Pct),
                 D(Cfg.PerdaNoLimite, "Fica leve no limite", 0f, 1f, Pct),
+                D(Cfg.LimiteHidraulica, "Limite da hidráulica", 0.2f, 1f, Pct),
                 S("DIREÇÃO"),
                 D(Cfg.Centralizacao, "Centralização andando", 0f, 0.6f, Pct),
                 D(Cfg.CentralizacaoParado, "Centralização parado", 0f, 0.4f, Pct),

@@ -185,6 +185,11 @@ namespace RealFFB
             float tau = Cfg.Suavizacao.Value;
             _satFiltrado = tau <= 0.001f ? satN : _satFiltrado + (satN - _satFiltrado) * (1f - Mathf.Exp(-dt / tau));
             Autoalinha = _satFiltrado * Cfg.Autoalinhamento.Value * semMotor;
+            // Direção hidráulica: a válvula deixa passar para as mãos só uma parte da força da caixa, e o resto a
+            // bomba assume. Por isso o volante não fica pesado em curva fechada nem manobrando, e perto do centro
+            // a força continua igual. Sem motor não há bomba e chega tudo.
+            float limite = Cfg.LimiteHidraulica.Value;
+            if (MotorLigado && limite > 0.01f && limite < 1f) Autoalinha = limite * (float)Math.Tanh(Autoalinha / limite);
 
             // Solavanco de um lado só: a roda que sobe é empurrada para trás e puxa o volante
             // para o lado dela (raio de rolagem positivo).

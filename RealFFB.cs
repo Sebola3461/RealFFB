@@ -127,7 +127,7 @@ namespace RealFFB
         internal static MelonPreferences_Entry<int> SinalConstante, Controle;
         internal static MelonPreferences_Entry<float> Forca, ForcaMinima, Curva, Suavizacao,
             Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
-            Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito,
+            Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito, LimiteHidraulica,
             Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, ImpactoLimite, FaixaGiro;
 
         internal static void Criar()
@@ -144,19 +144,20 @@ namespace RealFFB
             Forca = c.CreateEntry("Forca", 1.0f, description: "Força geral (multiplica tudo)");
             ForcaMinima = c.CreateEntry("ForcaMinima", 0.05f, description: "Força mínima: vence a zona morta das engrenagens/correia (G29/G920 ~0,05-0,08; direct drive 0)");
             Curva = c.CreateEntry("Curva", 1.0f, description: "Curva da força: abaixo de 1 realça forças pequenas, acima de 1 realça as grandes");
-            Suavizacao = c.CreateEntry("Suavizacao", 0.03f, description: "Filtro do autoalinhamento, em segundos (tira aspereza, aumenta atraso)");
+            Suavizacao = c.CreateEntry("Suavizacao", 0.015f, description: "Filtro do autoalinhamento, em segundos (tira aspereza, aumenta atraso)");
 
-            Autoalinhamento = c.CreateEntry("Autoalinhamento", 0.8f, description: "Torque que os pneus da frente fazem para voltar ao centro em curva");
-            AceleracaoReferencia = c.CreateEntry("AceleracaoReferencia", 0.30f, description: "Aceleração lateral (g) que dá força cheia");
+            Autoalinhamento = c.CreateEntry("Autoalinhamento", 0.45f, description: "Torque que os pneus da frente fazem para voltar ao centro em curva");
+            AceleracaoReferencia = c.CreateEntry("AceleracaoReferencia", 0.40f, description: "Aceleração lateral (g) que dá força cheia");
             TrilhaMecanica = c.CreateEntry("TrilhaMecanica", 0.35f, description: "Parte do autoalinhamento que vem do cáster e não some no limite do pneu (0..1)");
             PerdaNoLimite = c.CreateEntry("PerdaNoLimite", 1.0f, description: "Quanto o volante fica leve quando os pneus da frente chegam no limite (0 = nada)");
 
-            Centralizacao = c.CreateEntry("Centralizacao", 0.18f, description: "Mola de centralização andando (cáster/pino-mestre)");
+            Centralizacao = c.CreateEntry("Centralizacao", 0.25f, description: "Mola de centralização andando (cáster/pino-mestre)");
             CentralizacaoParado = c.CreateEntry("CentralizacaoParado", 0.05f, description: "Mola de centralização parado");
             AmortecedorParado = c.CreateEntry("AmortecedorParado", 0.30f, description: "Peso/arrasto do volante parado (pneu arrastando no chão)");
-            AmortecedorAndando = c.CreateEntry("AmortecedorAndando", 0.20f, description: "Peso/arrasto andando (caixa de direção hidráulica). Segura o volante quando você solta");
+            AmortecedorAndando = c.CreateEntry("AmortecedorAndando", 0.30f, description: "Peso/arrasto andando (caixa de direção hidráulica). Segura o volante quando você solta");
             AmortecedorSemMotor = c.CreateEntry("AmortecedorSemMotor", 0.75f, description: "Peso do volante com o motor desligado (sem direção hidráulica)");
             GanhoSemMotor = c.CreateEntry("GanhoSemMotor", 1.6f, description: "Multiplica autoalinhamento, mola e atrito com o motor desligado");
+            LimiteHidraulica = c.CreateEntry("LimiteHidraulica", 0.55f, description: "Força máxima do autoalinhamento com o motor ligado: a direção hidráulica assume o resto. 1 = sem limite");
             Atrito = c.CreateEntry("Atrito", 0.06f, description: "Atrito seco da caixa de direção e do pivô: o volante não volta sozinho por qualquer força e para de ir e voltar ao soltar");
 
             Solavancos = c.CreateEntry("Solavancos", 0.6f, description: "Tranco no volante quando só uma roda da frente pega um buraco/lombada");
@@ -207,19 +208,19 @@ namespace RealFFB
 
         // Presets do painel. Ordem: Forca, ForcaMinima, Curva, Suavizacao, Autoalinhamento, AceleracaoReferencia,
         // TrilhaMecanica, PerdaNoLimite, Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando,
-        // AmortecedorSemMotor, GanhoSemMotor, Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito.
+        // AmortecedorSemMotor, GanhoSemMotor, Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito, LimiteHidraulica.
         internal static readonly (string nome, float[] v)[] Presets =
         {
-            ("Suave",    new[] { 0.7f, 0.04f, 1.1f, 0.05f, 0.6f, 0.35f, 0.40f, 0.7f, 0.14f, 0.04f, 0.22f, 0.14f, 0.60f, 1.4f, 0.3f, 0.25f, 0.01f, 0.06f, 0.4f, 0.03f }),
-            ("Realista", new[] { 1.0f, 0.05f, 1.0f, 0.03f, 0.8f, 0.30f, 0.35f, 1.0f, 0.18f, 0.05f, 0.30f, 0.20f, 0.75f, 1.6f, 0.6f, 0.50f, 0.03f, 0.10f, 0.8f, 0.06f }),
-            ("Forte",    new[] { 1.3f, 0.07f, 0.9f, 0.02f, 1.1f, 0.25f, 0.30f, 1.0f, 0.25f, 0.08f, 0.38f, 0.26f, 0.90f, 1.8f, 0.9f, 0.80f, 0.05f, 0.14f, 1.2f, 0.09f }),
+            ("Suave",    new[] { 0.7f, 0.04f, 1.1f, 0.02f, 0.35f, 0.45f, 0.40f, 0.7f, 0.18f, 0.04f, 0.22f, 0.24f, 0.60f, 1.4f, 0.3f, 0.25f, 0.01f, 0.06f, 0.4f, 0.03f, 0.45f }),
+            ("Realista", new[] { 1.0f, 0.05f, 1.0f, 0.015f, 0.45f, 0.40f, 0.35f, 1.0f, 0.25f, 0.05f, 0.30f, 0.30f, 0.75f, 1.6f, 0.6f, 0.50f, 0.03f, 0.10f, 0.8f, 0.06f, 0.55f }),
+            ("Forte",    new[] { 1.3f, 0.07f, 0.9f, 0.01f, 0.6f, 0.35f, 0.30f, 1.0f, 0.32f, 0.08f, 0.38f, 0.36f, 0.90f, 1.8f, 0.9f, 0.80f, 0.05f, 0.14f, 1.2f, 0.09f, 0.70f }),
         };
 
         internal static MelonPreferences_Entry<float>[] EntradasPreset => new[]
         {
             Forca, ForcaMinima, Curva, Suavizacao, Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
             Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor,
-            Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito,
+            Solavancos, Textura, Asfalto, VibracaoMotor, Impactos, Atrito, LimiteHidraulica,
         };
 
         internal static void AplicarPreset(int i)
