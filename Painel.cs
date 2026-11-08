@@ -143,7 +143,8 @@ namespace RealFFB
             GUI.Label(new Rect(x, y, cw, 26f), "REALFFB", _titulo);
             GUI.Label(new Rect(x, y, cw, 26f), Cfg.TeclaPainel.Combinacao.Legivel() + " fecha", _fracoDireita);
             y += 28f;
-            GUI.Label(new Rect(x, y, cw, 18f), "Force feedback · " + Ffb.Estado + (Ffb.FaixaAtual > 0 ? $"   ·   volante em {Ffb.FaixaAtual}°" : ""), _fraco);
+            GUI.Label(new Rect(x, y, cw, 18f), "Force feedback · " + Ffb.Estado + (Ffb.FaixaAtual > 0 ? $"   ·   volante em {Ffb.FaixaAtual}°" : "")
+                + (Pedais.Estado != "" ? "   ·   embreagem no " + Pedais.Estado : ""), _fraco);
             y += 24f;
 
             y = Medidor(x, y, cw);

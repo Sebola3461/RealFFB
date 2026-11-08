@@ -7,7 +7,7 @@ using MelonLoader;
 using PBSLoaderCommonUtils;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(RealFFB.RealFFBMod), "RealFFB", "0.3.0", "nzrn")]
+[assembly: MelonInfo(typeof(RealFFB.RealFFBMod), "RealFFB", "0.4.0", "nzrn")]
 [assembly: MelonGame(null, "Proton Bus Simulator")]
 
 namespace RealFFB
@@ -34,6 +34,7 @@ namespace RealFFB
         {
             Cfg.Criar();
             BloquearMolaDoJogo();
+            Pedais.Instalar(HarmonyInstance);
         }
 
         // A chamada à SDK fica embutida no MEPControlesBus.Update; o prefixo no LogitechGSDK
@@ -124,7 +125,7 @@ namespace RealFFB
         static MelonPreferences_Entry<bool> _migrado;
         internal static Atalho TeclaPainel, TeclaTelemetria;
         internal static MelonPreferences_Entry<bool> Ligado, Leds;
-        internal static MelonPreferences_Entry<int> SinalConstante, Controle;
+        internal static MelonPreferences_Entry<int> SinalConstante, Controle, EixoEmbreagem;
         internal static MelonPreferences_Entry<float> Forca, ForcaMinima, Curva, Suavizacao,
             Autoalinhamento, AceleracaoReferencia, TrilhaMecanica, PerdaNoLimite,
             Centralizacao, CentralizacaoParado, AmortecedorParado, AmortecedorAndando, AmortecedorSemMotor, GanhoSemMotor, Atrito, LimiteHidraulica, Antecipacao,
@@ -168,7 +169,8 @@ namespace RealFFB
             Impactos = c.CreateEntry("Impactos", 0.8f, description: "Trancos de batida, meio-fio e buraco forte");
             ImpactoLimite = c.CreateEntry("ImpactoLimite", 18f, description: "Aceleração brusca (m/s²) a partir da qual conta como impacto");
 
-            FaixaGiro = c.CreateEntry("GrausVolante", 900f, description: "Ângulo total de giro do volante, de batente a batente (o G HUB costuma deixar travado em outro valor). 0 = não mexe");
+            FaixaGiro = c.CreateEntry("GrausVolante", 900f, description: "Ângulo total de giro do volante, de batente a batente. Com o G HUB o mod pede uma vez e, se o G HUB não aceitar, desiste e vale o do G HUB. 0 = não mexe");
+            EixoEmbreagem = c.CreateEntry("EixoEmbreagem", -1, description: "Eixo do pedal de embreagem: -1 = descobre sozinho (G29/G920 não usam o eixo que o jogo lê), 0 = deixa o jogo ler, 2 = Z, 3 = Rx, 4 = Ry, 6 = Slider 0, 7 = Slider 1");
             Leds = c.CreateEntry("Leds", true, description: "LEDs de rotação do volante (G29/G923) acompanham o motor");
 
             if (!_migrado.Value)

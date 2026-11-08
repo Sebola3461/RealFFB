@@ -68,7 +68,7 @@ namespace RealFFB
             {
                 try { Logi.PararTudo(); } catch { }
                 Assumiu = false;
-                _hidEnviado = -1; _faixaPedida = -1;
+                _hidEnviado = -1; _faixaPedida = -1; _pedidosSdk = 0;
             }
         }
 
@@ -367,11 +367,12 @@ namespace RealFFB
             Log.Msg(novo > 0 ? msgPos : msgNeg);
         }
 
-        // O G HUB/LGS costuma deixar o volante travado em outra faixa (e às vezes volta para ela).
-        // Primeiro tenta pela SDK; se ela não sabe a faixa (LGS 5.10 antigo, só Profiler),
-        // manda o comando nativo direto pelo USB. Reenvia por 20 s depois de assumir, porque o
-        // Profiler reaplica o perfil quando o jogo ganha foco.
-        static int _faixaPedida = -1, _hidEnviado = -1;
+        // Quando a SDK sabe a faixa (G HUB, LGS novo), só ela é usada, e no máximo algumas vezes: se o G HUB
+        // reaplica o perfil dele, insistir faz os dois brigarem e o giro muda no meio da curva.
+        // Se a SDK não sabe a faixa (LGS 5.10 antigo, só Profiler), manda o comando nativo direto pelo USB.
+        // Reenvia por 20 s depois de assumir, porque o Profiler reaplica o perfil quando o jogo ganha foco.
+        const int MaxPedidosSdk = 3;
+        static int _faixaPedida = -1, _hidEnviado = -1, _pedidosSdk;
         static float _hidReenviarAte;
         static void AplicarFaixaGiro()
         {
@@ -383,12 +384,15 @@ namespace RealFFB
             if (sdk > 0)
             {
                 FaixaAtual = sdk;
-                if (sdk == f) return;
+                if (f != _faixaPedida) { _faixaPedida = f; _pedidosSdk = 0; }
+                if (sdk == f || _pedidosSdk >= MaxPedidosSdk) return;
+                _pedidosSdk++;
                 Logi.DefinirFaixaGiro(f);
                 FaixaAtual = Logi.FaixaGiro();
-                if (f != _faixaPedida) Log.Msg($"Ângulo do volante pela SDK: {sdk}° -> {FaixaAtual}°");
-                _faixaPedida = f;
-                if (FaixaAtual == f) return;
+                Log.Msg($"Ângulo do volante pela SDK: {sdk}° -> {FaixaAtual}° (pedido {f}°)");
+                if (_pedidosSdk == MaxPedidosSdk && FaixaAtual != f)
+                    Log.Aviso($"O G HUB não manteve {f}°; fica o ângulo dele ({FaixaAtual}°). Ajuste no G HUB ou ponha o ângulo do mod em \"G HUB\"");
+                return;
             }
             bool novo = f != _hidEnviado;
             if (!novo && Time.unscaledTime > _hidReenviarAte) return;

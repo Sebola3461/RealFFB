@@ -14,14 +14,18 @@ dura com a velocidade. Este mod substitui essa mola por:
 - **Irregularidades e impactos:** vêm da suspensão e da carroceria.
 - **Textura da pista e motor:** vibração da pista e do diesel, mais forte em marcha lenta e mais fraca acelerando.
 - **LEDs de rotação**, nos volantes que têm.
-- **Ângulo de giro do volante:** o padrão é 900°.
+- **Ângulo de giro do volante:** o padrão é 900°. Com o G HUB, o mod pede esse ângulo e, se o G HUB não aceitar,
+  fica o do G HUB, sem disputa.
+- **Embreagem no G29/G920:** o jogo só lê a embreagem no eixo do G25/G27. O mod descobre em qual eixo o pedal está
+  e passa o valor para o jogo. Na primeira vez, pise a embreagem até o fim uma vez; até lá ela fica solta.
 
 Requer o [PBSLoader](https://github.com/Sebola3461/pbsu-loader) (PBSLoaderCommonUtils e PBSLoaderCommonInterface).
 
 ## Compatibilidade
 
 Testado só num **G25 com o Logitech Gaming Software 5.10** (antigo). Em outros modelos Logitech (G27, G29, G920, G923)
-e com o G HUB, o mod deve funcionar pelo SDK da Logitech, mas ainda não foi testado. Volantes de outras marcas não
+e com o G HUB, o mod deve funcionar pelo SDK da Logitech, mas ainda não foi testado. A correção do ângulo e da
+embreagem no G29 foi feita a partir de relato de usuário e também não foi testada num G29. Volantes de outras marcas não
 recebem force feedback do jogo, nem com o mod.
 
 Na primeira vez, o mod descobre sozinho o sentido da força, com o ônibus parado e o volante solto. Se o volante puxar
@@ -56,6 +60,7 @@ As opções ficam na categoria `[RealFFB]` e no menu **Mods** da PBSLoaderCommon
 | `VibracaoMotor` | Vibração do motor em marcha lenta |
 | `Controle` | -1 procura o volante sozinho; 0 a 3 escolhe o controle |
 | `GrausVolante` | Ângulo de giro, de batente a batente. 0 deixa o que o software da Logitech definiu |
+| `EixoEmbreagem` | -1 acha o pedal sozinho; 0 deixa o jogo ler (G25/G27); 2 Z, 3 Rx, 4 Ry, 6 Slider 0, 7 Slider 1 |
 | `SinalConstante` | Sentido da força no seu driver. 0 testa sozinho |
 
 ## Reportar um problema
