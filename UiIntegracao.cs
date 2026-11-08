@@ -20,6 +20,7 @@ namespace RealFFB
             const string C = Cfg.Id;
             PBSLoaderCommonInterface.PainelMods.Nome(C, "Volante (force feedback)");
             PBSLoaderCommonInterface.PainelMods.Acao(C, "Ajustes do force feedback", Painel.Alternar, "Força, curva e efeitos do volante");
+            PBSLoaderCommonInterface.PainelMods.Acao(C, "Inverter força", Cfg.InverterForca, "Para quando o volante gira sozinho para o lado errado ou foge do centro");
             PBSLoaderCommonInterface.PainelMods.Acao(C, "Telemetria", Telemetria.Alternar, "Liga ou desliga a gravação de telemetria");
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "Forca", 0f, 2f, 0.05f);
             PBSLoaderCommonInterface.PainelMods.Faixa(C, "ForcaMinima", 0f, 0.2f, 0.01f);

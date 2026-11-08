@@ -28,8 +28,11 @@ e com o G HUB, o mod deve funcionar pelo SDK da Logitech, mas ainda não foi tes
 embreagem no G29 foi feita a partir de relato de usuário e também não foi testada num G29. Volantes de outras marcas não
 recebem force feedback do jogo, nem com o mod.
 
-Na primeira vez, o mod descobre sozinho o sentido da força, com o ônibus parado e o volante solto. Se o volante puxar
-para o lado errado, use **INVERTER** no painel.
+Na primeira vez, o mod descobre sozinho o sentido da força, com o ônibus parado e o volante solto. Há dois ajustes de
+sentido, no painel e no menu **Mods**:
+
+- **Inverter força:** quando o volante gira sozinho para o lado errado ou foge do centro.
+- **Giro invertido** (`InverterGiro`): quando o ônibus vira para o lado contrário do volante.
 
 O mod procura sozinho o volante Logitech entre os controles ligados. Se você tem outros controles (Arduino, pedaleira,
 manche) e ele escolher errado, troque no botão **CONTROLE** do painel. O jogo original sempre usa o primeiro controle,
@@ -62,6 +65,7 @@ As opções ficam na categoria `[RealFFB]` e no menu **Mods** da PBSLoaderCommon
 | `GrausVolante` | Ângulo de giro, de batente a batente. 0 deixa o que o software da Logitech definiu |
 | `EixoEmbreagem` | -1 acha o pedal sozinho; 0 deixa o jogo ler (G25/G27); 2 Z, 3 Rx, 4 Ry, 6 Slider 0, 7 Slider 1 |
 | `SinalConstante` | Sentido da força no seu driver. 0 testa sozinho |
+| `InverterGiro` | Inverte o volante no jogo (virar para a direita esterça para a esquerda) |
 
 ## Reportar um problema
 

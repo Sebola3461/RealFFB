@@ -33,13 +33,18 @@ namespace RealFFB
             }
             catch (Exception e)
             {
-                Log.Aviso("Não deu para corrigir a embreagem de volantes fora do padrão G27: " + e.Message);
+                Log.Aviso("Não deu para corrigir a embreagem nem inverter o giro do volante: " + e.Message);
             }
         }
 
         static void DepoisDoUpdate(VPDeviceInputMepStatic __instance)
         {
-            try { Corrigir(__instance); }
+            try
+            {
+                // O force feedback aprende o sentido do esterço pelo eixo físico, então se ajusta sozinho à inversão.
+                if (Cfg.InverterGiro.Value) VPDeviceInputMepStatic.volanteSteering = -VPDeviceInputMepStatic.volanteSteering;
+                Corrigir(__instance);
+            }
             catch (Exception e) { Log.Erro("Embreagem", e); }
         }
 

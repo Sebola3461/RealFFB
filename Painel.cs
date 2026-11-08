@@ -161,13 +161,13 @@ namespace RealFFB
             float hw = (cw - 6f) / 2f;
             if (GUI.Button(new Rect(x, y, hw, 26f), "TESTAR DIREÇÃO", _botao)) Calibracao.Pedir();
             string sentido = Cfg.SinalConstante.Value == 0 ? "SENTIDO: ?" : Cfg.SinalConstante.Value > 0 ? "SENTIDO: +" : "SENTIDO: −";
-            if (GUI.Button(new Rect(x + hw + 6f, y, hw, 26f), "INVERTER  (" + sentido + ")", _botao))
-            {
-                Cfg.SinalConstante.Value = Cfg.SinalConstante.Value == 0 ? -1 : -Cfg.SinalConstante.Value;
-                _sujo = true;
-            }
+            if (GUI.Button(new Rect(x + hw + 6f, y, hw, 26f), "INVERTER FORÇA  (" + sentido + ")", _botao))
+                Cfg.InverterForca();
             y += 30f;
-            if (GUI.Button(new Rect(x, y, cw, 26f), "CONTROLE:  " + TextoControle(), _botao)) ProximoControle();
+            if (GUI.Button(new Rect(x, y, hw, 26f), "CONTROLE:  " + TextoControle(), _botao)) ProximoControle();
+            bool invertido = Cfg.InverterGiro.Value;
+            if (GUI.Button(new Rect(x + hw + 6f, y, hw, 26f), invertido ? "GIRO: INVERTIDO" : "GIRO: NORMAL", invertido ? _botaoAtivo : _botao))
+            { Cfg.InverterGiro.Value = !invertido; _sujo = true; }
             y += 30f;
             if (Calibracao.Resultado.Length > 0) { GUI.Label(new Rect(x, y, cw, 18f), Calibracao.Resultado, _fraco); y += 20f; }
 
