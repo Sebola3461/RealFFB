@@ -132,17 +132,6 @@ namespace RealFFB
             return p == IntPtr.Zero ? 0 : Marshal.ReadInt32(p);
         }
 
-        // Um int do DIJOYSTATE2: 0 lX, 1 lY, 2 lZ, 3 lRx, 4 lRy, 5 lRz, 6 rglSlider[0], 7 rglSlider[1].
-        internal static bool LerEixo(int campo, out int valor)
-        {
-            valor = 0;
-            if (Indice < 0) return false;
-            var p = _estado(Indice);
-            if (p == IntPtr.Zero) return false;
-            valor = Marshal.ReadInt32(p, campo * 4);
-            return true;
-        }
-
         static int _ultConst = int.MinValue;
         internal static void Constante(int pct)
         {

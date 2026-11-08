@@ -143,8 +143,7 @@ namespace RealFFB
             GUI.Label(new Rect(x, y, cw, 26f), "REALFFB", _titulo);
             GUI.Label(new Rect(x, y, cw, 26f), Cfg.TeclaPainel.Combinacao.Legivel() + " fecha", _fracoDireita);
             y += 28f;
-            GUI.Label(new Rect(x, y, cw, 18f), "Force feedback · " + Ffb.Estado + (Ffb.FaixaAtual > 0 ? $"   ·   volante em {Ffb.FaixaAtual}°" : "")
-                + (Pedais.Estado != "" ? "   ·   embreagem no " + Pedais.Estado : ""), _fraco);
+            GUI.Label(new Rect(x, y, cw, 18f), "Force feedback · " + Ffb.Estado + (Ffb.FaixaAtual > 0 ? $"   ·   volante em {Ffb.FaixaAtual}°" : ""), _fraco);
             y += 24f;
 
             y = Medidor(x, y, cw);
@@ -164,10 +163,7 @@ namespace RealFFB
             if (GUI.Button(new Rect(x + hw + 6f, y, hw, 26f), "INVERTER FORÇA  (" + sentido + ")", _botao))
                 Cfg.InverterForca();
             y += 30f;
-            if (GUI.Button(new Rect(x, y, hw, 26f), "CONTROLE:  " + TextoControle(), _botao)) ProximoControle();
-            bool invertido = Cfg.InverterGiro.Value;
-            if (GUI.Button(new Rect(x + hw + 6f, y, hw, 26f), invertido ? "GIRO: INVERTIDO" : "GIRO: NORMAL", invertido ? _botaoAtivo : _botao))
-            { Cfg.InverterGiro.Value = !invertido; _sujo = true; }
+            if (GUI.Button(new Rect(x, y, cw, 26f), "CONTROLE:  " + TextoControle(), _botao)) ProximoControle();
             y += 30f;
             if (Calibracao.Resultado.Length > 0) { GUI.Label(new Rect(x, y, cw, 18f), Calibracao.Resultado, _fraco); y += 20f; }
 
